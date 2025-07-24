@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор Рисков Сделки</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Soft light blue-gray background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1); /* Stronger, professional shadow */
+            max-width: 600px;
+            width: 100%;
+            border: 1px solid #e2e8f0; /* Subtle border */
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            color: #2c5282; /* Darker, deep blue for headings */
+            font-weight: 800; /* Extra bold */
+            margin-bottom: 32px;
+        }
+
+        label {
+            font-weight: 600; /* Semi-bold */
+            color: #4a5568; /* Medium dark gray */
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        input[type="number"],
+        select {
+            padding: 12px 16px;
+            border: 1px solid #cbd5e0; /* Lighter border */
+            border-radius: 8px;
+            width: 100%;
+            font-size: 16px;
+            color: #2d3748; /* Dark text for inputs */
+            background-color: #f7fafc; /* Very light input background */
+            transition: border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        }
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #3182ce; /* Professional blue on focus */
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.2); /* Blue shadow */
+        }
+
+        .radio-group label {
+            font-weight: 500;
+            color: #4a5568;
+        }
+        .radio-group input[type="radio"] {
+            accent-color: #3182ce; /* Professional blue for radio buttons */
+        }
+
+        button {
+            background-color: #3182ce; /* Professional blue button */
+            color: #ffffff;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 700; /* Bold */
+            width: 100%;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out, box-shadow 0.3s ease-in-out;
+            border: none;
+            box-shadow: 0 4px 15px rgba(49, 130, 206, 0.4); /* Stronger button shadow */
+        }
+        button:hover {
+            background-color: #2b6cb0; /* Darker blue on hover */
+            transform: translateY(-2px); /* Slight lift effect */
+            box-shadow: 0 6px 20px rgba(49, 130, 206, 0.5);
+        }
+        /* Убрана кнопка "Получить Анализ Сделки", поэтому этот стиль больше не нужен */
+        /* button + button {
+            margin-top: 16px;
+        } */
+
+        .result-box {
+            background-color: #e2e8f0; /* Light blue-gray for results */
+            padding: 28px;
+            border-radius: 12px;
+            border: 1px solid #cbd5e0;
+            margin-top: 32px;
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-box h2 {
+            color: #2c5282; /* Dark blue for result heading */
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .result-item {
+            display: flex; /* Добавлено для выравнивания */
+            justify-content: space-between; /* Добавлено для выравнивания */
+            align-items: center; /* Добавлено для выравнивания */
+            padding: 10px 0;
+            border-bottom: 1px dashed #a0aec0; /* Lighter dashed line */
+        }
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        .result-label {
+            font-weight: 500;
+            color: #4a5568;
+        }
+        .result-value {
+            font-weight: 700;
+            color: #2d3748;
+            font-size: 19px; /* Slightly larger result values */
+        }
+        .error-message {
+            color: #e53e3e; /* Red for errors */
+            margin-top: 15px;
+            font-size: 15px;
+            text-align: center;
+            font-weight: 500;
+        }
+        /* Loading spinner and trade insight styles are no longer needed */
+        .loading-spinner, .trade-insight {
+            display: none !important; /* Ensure these are hidden */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold text-center mb-8">Калькулятор Рисков Сделки</h1>
+
+        <div class="mb-6">
+            <label for="totalCapital" class="block text-sm mb-2">Общий Капитал ($)</label>
+            <input type="number" id="totalCapital" placeholder="Например, 10000" class="rounded-md">
+        </div>
+
+        <div class="mb-6">
+            <label for="tradeCapital" class="block text-sm mb-2">Капитал для Входа в Сделку ($)</label>
+            <input type="number" id="tradeCapital" placeholder="Например, 1000" class="rounded-md">
+        </div>
+
+        <div class="mb-6">
+            <label for="entryPrice" class="block text-sm mb-2">Цена Входа ($)</label>
+            <input type="number" id="entryPrice" placeholder="Например, 100" class="rounded-md">
+        </div>
+
+        <div class="mb-6">
+            <label for="leverage" class="block text-sm mb-2">Кредитное Плечо</label>
+            <select id="leverage" class="rounded-md">
+                <option value="1">1x</option>
+                <option value="2">2x</option>
+                <option value="3">3x</option>
+                <option value="4">4x</option>
+                <option value="5">5x</option>
+                <option value="6">6x</option>
+                <option value="7">7x</option>
+                <option value="8">8x</option>
+                <option value="9">9x</option>
+                <option value="10">10x</option>
+            </select>
+        </div>
+
+        <div class="mb-6">
+            <label for="riskRewardRatio" class="block text-sm mb-2">Соотношение Риск/Прибыль (1:X)</label>
+            <select id="riskRewardRatio" class="rounded-md">
+                <option value="1">1:1</option>
+                <option value="2" selected>1:2</option>
+                <option value="3">1:3</option>
+                <option value="4">1:4</option>
+                <option value="5">1:5</option>
+            </select>
+        </div>
+
+        <div class="mb-6">
+            <label for="usdRubRate" class="block text-sm mb-2">Курс USD/RUB</label>
+            <input type="number" id="usdRubRate" min="1" placeholder="Введите текущий курс USD/RUB" class="rounded-md">
+        </div>
+
+        <div class="mb-6">
+            <label class="block text-sm mb-2">Тип Позиции</label>
+            <div class="radio-group">
+                <label>
+                    <input type="radio" name="positionType" value="long" checked>
+                    Длинная (Long)
+                </label>
+                <label>
+                    <input type="radio" name="positionType" value="short">
+                    Короткая (Short)
+                </label>
+            </div>
+        </div>
+
+        <button onclick="calculateTrade()">Рассчитать</button>
+        <!-- Кнопка "Получить Анализ Сделки" удалена -->
+
+        <div id="errorMessage" class="error-message hidden"></div>
+
+        <div id="results" class="result-box hidden">
+            <h2 class="text-xl text-center mb-4">Результаты Расчета</h2>
+            <div class="result-item">
+                <span class="result-label">Риск на Сделку (1% от общего капитала):</span>
+                <span id="riskAmount" class="result-value"></span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Эффективный Капитал в Сделке (с плечом):</span>
+                <span id="effectiveTradeCapital" class="result-value"></span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Размер Позиции (единиц/акций):</span>
+                <span id="positionSize" class="result-value"></span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Цена Стоп-Лосса:</span>
+                <span id="stopLossPrice" class="result-value"></span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Цена Тейк-Профита:</span>
+                <span id="takeProfitPrice" class="result-value"></span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Расстояние до Стоп-Лосса:</span>
+                <span id="slDistance" class="result-value"></span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Расстояние до Тейк-Профита:</span>
+                <span id="tpDistance" class="result-value"></span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Процент до Стоп-Лосса:</span>
+                <span id="slPercentage" class="result-value"></span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Процент до Тейк-Профита:</span>
+                <span id="tpPercentage" class="result-value"></span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Потенциальная Потеря (USD):</span>
+                <span id="potentialLossUSD" class="result-value"></span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Потенциальная Прибыль (USD):</span>
+                <span id="potentialProfitUSD" class="result-value"></span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Потенциальная Потеря (RUB):</span>
+                <span id="potentialLossRUB" class="result-value"></span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">Потенциальная Прибыль (RUB):</span>
+                <span id="potentialProfitRUB" class="result-value"></span>
+            </div>
+            <!-- Спиннер загрузки и блок анализа сделки полностью удалены -->
+        </div>
+    </div>
+
+    <script>
+        // Global variables to store calculated values for insight generation
+        let currentTradeParams = null;
+
+        function calculateTrade() {
+            // Get input values
+            const totalCapital = parseFloat(document.getElementById('totalCapital').value);
+            const tradeCapital = parseFloat(document.getElementById('tradeCapital').value);
+            const entryPrice = parseFloat(document.getElementById('entryPrice').value);
+            const leverage = parseInt(document.getElementById('leverage').value);
+            const riskRewardRatio = parseFloat(document.getElementById('riskRewardRatio').value);
+            const usdRubRate = parseFloat(document.getElementById('usdRubRate').value);
+            const positionType = document.querySelector('input[name="positionType"]:checked').value;
+
+            const errorMessageDiv = document.getElementById('errorMessage');
+            const resultsDiv = document.getElementById('results');
+
+            // Hide previous error messages and results
+            errorMessageDiv.classList.add('hidden');
+            resultsDiv.classList.add('hidden');
+
+            // Input validation
+            if (isNaN(totalCapital) || isNaN(tradeCapital) || isNaN(entryPrice) || isNaN(leverage) || isNaN(riskRewardRatio) || isNaN(usdRubRate) ||
+                totalCapital <= 0 || tradeCapital <= 0 || entryPrice <= 0 || leverage < 1 || leverage > 10 || riskRewardRatio <= 0 || usdRubRate <= 0) {
+                errorMessageDiv.textContent = 'Пожалуйста, введите корректные положительные числа во все поля. Плечо должно быть от 1x до 10x, а курс USD/RUB должен быть положительным.';
+                errorMessageDiv.classList.remove('hidden');
+                currentTradeParams = null; // Clear parameters if validation fails
+                return;
+            }
+
+            if (tradeCapital > totalCapital) {
+                errorMessageDiv.textContent = 'Капитал для входа в сделку не может быть больше общего капитала.';
+                errorMessageDiv.classList.remove('hidden');
+                currentTradeParams = null; // Clear parameters if validation fails
+                return;
+            }
+
+            // Calculate effective capital with leverage
+            const effectiveTradeCapital = tradeCapital * leverage;
+
+            // Calculate risk amount (fixed 1% of total capital)
+            const riskAmount = totalCapital * 0.01;
+
+            // Calculate position size (number of units/shares)
+            const positionSize = effectiveTradeCapital / entryPrice;
+
+            // Check if positionSize is too small, which would lead to an impossibly large stop-loss distance
+            if (positionSize === 0 || !isFinite(positionSize)) { // Added isFinite check
+                errorMessageDiv.textContent = 'Размер позиции равен нулю или бесконечности. Увеличьте капитал для сделки, уменьшите цену входа или проверьте введенные значения.';
+                errorMessageDiv.classList.remove('hidden');
+                currentTradeParams = null; // Clear parameters if validation fails
+                return;
+            }
+
+            // Calculate the allowed loss per unit
+            const lossPerUnitAllowed = riskAmount / positionSize;
+
+            let stopLossPrice;
+            let slDistance; // Absolute distance from entry to stop-loss
+            let takeProfitPrice;
+            let tpDistance; // Absolute distance from entry to take-profit
+
+            if (positionType === 'long') {
+                // For a long position, stop-loss is below entry price
+                stopLossPrice = entryPrice - lossPerUnitAllowed;
+
+                if (stopLossPrice <= 0 || !isFinite(stopLossPrice)) {
+                    errorMessageDiv.textContent = 'Расчетная цена стоп-лосса для длинной позиции слишком низкая (меньше или равна нулю). Уменьшите риск, увеличьте капитал для сделки или уменьшите плечо.';
+                    errorMessageDiv.classList.remove('hidden');
+                    currentTradeParams = null; // Clear parameters if validation fails
+                    return;
+                }
+
+                slDistance = entryPrice - stopLossPrice; // Always positive for long
+                tpDistance = slDistance * riskRewardRatio;
+                takeProfitPrice = entryPrice + tpDistance;
+
+            } else { // positionType === 'short'
+                // For a short position, stop-loss is above entry price
+                stopLossPrice = entryPrice + lossPerUnitAllowed;
+
+                slDistance = stopLossPrice - entryPrice; // Always positive for short
+                tpDistance = slDistance * riskRewardRatio;
+                takeProfitPrice = entryPrice - tpDistance;
+
+                if (takeProfitPrice <= 0 || !isFinite(takeProfitPrice)) {
+                    errorMessageDiv.textContent = 'Расчетная цена тейк-профита для короткой позиции слишком низкая (меньше или равна нулю). Уменьшите риск или увеличьте цену входа.';
+                    errorMessageDiv.classList.remove('hidden');
+                    currentTradeParams = null; // Clear parameters if validation fails
+                    return;
+                }
+            }
+
+            // Calculate percentages
+            const slPercentage = (slDistance / entryPrice) * 100;
+            const tpPercentage = (tpDistance / entryPrice) * 100;
+
+            // Calculate potential loss and profit in USD and RUB
+            const potentialLossUSD = riskAmount;
+            const potentialProfitUSD = riskAmount * riskRewardRatio;
+            // Используем usdRubRate для расчета в рублях
+            const potentialLossRUB = potentialLossUSD * usdRubRate;
+            const potentialProfitRUB = potentialProfitUSD * usdRubRate;
+
+            // Store calculated parameters for insight generation (currentTradeParams все еще нужен для отображения)
+            currentTradeParams = {
+                positionType,
+                entryPrice: entryPrice.toFixed(2),
+                stopLossPrice: stopLossPrice.toFixed(2),
+                takeProfitPrice: takeProfitPrice.toFixed(2),
+                riskAmount: riskAmount.toFixed(2),
+                positionSize: positionSize.toFixed(5),
+                leverage,
+                riskRewardRatio,
+                slPercentage: slPercentage.toFixed(2),
+                tpPercentage: tpPercentage.toFixed(2),
+                potentialLossUSD: potentialLossUSD.toFixed(2),
+                potentialProfitUSD: potentialProfitUSD.toFixed(2),
+                potentialLossRUB: potentialLossRUB.toFixed(2),
+                potentialProfitRUB: potentialProfitRUB.toFixed(2),
+                usdRubRate: usdRubRate.toFixed(2)
+            };
+
+            // Display results
+            document.getElementById('riskAmount').textContent = `$${riskAmount.toFixed(2)}`;
+            document.getElementById('effectiveTradeCapital').textContent = `$${effectiveTradeCapital.toFixed(2)}`;
+            document.getElementById('positionSize').textContent = positionSize.toFixed(5);
+            document.getElementById('stopLossPrice').textContent = `$${stopLossPrice.toFixed(2)}`;
+            document.getElementById('takeProfitPrice').textContent = `$${takeProfitPrice.toFixed(2)}`;
+            document.getElementById('slDistance').textContent = `$${slDistance.toFixed(2)}`;
+            document.getElementById('tpDistance').textContent = `$${tpDistance.toFixed(2)}`;
+            document.getElementById('slPercentage').textContent = `${slPercentage.toFixed(2)}%`;
+            document.getElementById('tpPercentage').textContent = `${tpPercentage.toFixed(2)}%`;
+            document.getElementById('potentialLossUSD').textContent = `$${potentialLossUSD.toFixed(2)}`;
+            document.getElementById('potentialProfitUSD').textContent = `$${potentialProfitUSD.toFixed(2)}`;
+            document.getElementById('potentialLossRUB').textContent = `₽${potentialLossRUB.toFixed(2)}`;
+            document.getElementById('potentialProfitRUB').textContent = `₽${potentialProfitRUB.toFixed(2)}`;
+
+            resultsDiv.classList.remove('hidden');
+        }
+
+        // Функция getTradeInsight полностью удалена
+    </script>
+</body>
+</html>
